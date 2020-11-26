@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Rocket : MonoBehaviour {
     [SerializeField] private float _rcsThrust = 100f;
@@ -53,10 +54,15 @@ public class Rocket : MonoBehaviour {
     private void OnCollisionEnter(Collision other) {
         switch (other.transform.tag) {
             case "Friendly":
-                Debug.Log("Friendly");
+                Debug.Log("Hit Friendly");
+                break;
+            case "Finish":
+                Debug.Log("Hit Finish");
+                SceneManager.LoadScene(1);
                 break;
             default:
                 Debug.Log("Not friendly");
+                SceneManager.LoadScene(0);
                 break;
         }
     }
