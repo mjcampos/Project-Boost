@@ -5,8 +5,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class Rocket : MonoBehaviour {
-    [SerializeField] private float _rcsRespondToThrustInput = 100f;
-    [SerializeField] private float _mainRespondToThrustInput = 100f;
+    [SerializeField] private float _rcsThrust = 100f;
+    [SerializeField] private float _mainThrust = 100f;
+    [SerializeField] private float _levelLoadDelay = 2f;
     [SerializeField] private AudioClip _mainEngine;
     [SerializeField] private AudioClip _engineExplosion;
     [SerializeField] private AudioClip _success;
@@ -51,7 +52,7 @@ public class Rocket : MonoBehaviour {
     }
 
     private void ApplyThrust() {
-        _rigidbody.AddRelativeForce(Vector3.up * _mainRespondToThrustInput * Time.deltaTime);
+        _rigidbody.AddRelativeForce(Vector3.up * _mainThrust * Time.deltaTime);
 
         if (!_audioSource.isPlaying) {
             _audioSource.PlayOneShot(_mainEngine);
@@ -61,7 +62,7 @@ public class Rocket : MonoBehaviour {
     }
 
     private void RespondToRotateInput() {
-        float rotationSpeed = _rcsRespondToThrustInput * Time.deltaTime;
+        float rotationSpeed = _rcsThrust * Time.deltaTime;
         
         _rigidbody.freezeRotation = true;
         
@@ -98,7 +99,7 @@ public class Rocket : MonoBehaviour {
         _audioSource.Stop();
         _audioSource.PlayOneShot(_engineExplosion);
         _engineExplosionParticles.Play();
-        Invoke("LoadFirstLevel", 1f);
+        Invoke("LoadFirstLevel", _levelLoadDelay);
     }
 
     private void StartSuccessSequence() {
@@ -106,7 +107,7 @@ public class Rocket : MonoBehaviour {
         _audioSource.Stop();
         _audioSource.PlayOneShot(_success);
         _successParticles.Play();
-        Invoke("LoadNextScene", 1f);
+        Invoke("LoadNextScene", _levelLoadDelay);
     }
 
     private void LoadNextScene() {
