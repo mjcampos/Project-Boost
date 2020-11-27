@@ -5,12 +5,23 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class Rocket : MonoBehaviour {
-    [SerializeField] private float _rcsThrust = 100f;
-    [SerializeField] private float _mainThrust = 100f;
+    [SerializeField] private float _rcsRespondToThrustInput = 100f;
+    [SerializeField] private float _mainRespondToThrustInput = 100f;
+    [SerializeField] private AudioClip _mainEngine;
+    [SerializeField] private AudioClip _engineExplosion;
+    [SerializeField] private AudioClip _success;
     
     // Config
     private Rigidbody _rigidbody;
     private AudioSource _audioSource;
+
+    enum State {
+        Alive,
+        Dying,
+        Trascending
+    };
+
+    [SerializeField] private State _state = State.Alive;
 
     // Start is called before the first frame update
     void Start() {
@@ -20,24 +31,30 @@ public class Rocket : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        Thrust();
-        Rotate();
+        if (_state == State.Alive) {
+            RespondToThrustInput();
+            RespondToRotateInput();
+        }
     }
 
-    private void Thrust() {
+    private void RespondToThrustInput() {
         if (Input.GetKey(KeyCode.Space)) {
-            _rigidbody.AddRelativeForce(Vector3.up * _mainThrust * Time.deltaTime);
-
-            if (!_audioSource.isPlaying) {
-                _audioSource.Play();
-            }
+            ApplyThrust();
         } else {
             _audioSource.Stop();
         }
     }
 
-    private void Rotate() {
-        float rotationSpeed = _rcsThrust * Time.deltaTime;
+    private void ApplyThrust() {
+        _rigidbody.AddRelativeForce(Vector3.up * _mainRespondToThrustInput * Time.deltaTime);
+
+        if (!_audioSource.isPlaying) {
+            _audioSource.PlayOneShot(_mainEngine);
+        }
+    }
+
+    private void RespondToRotateInput() {
+        float rotationSpeed = _rcsRespondToThrustInput * Time.deltaTime;
         
         _rigidbody.freezeRotation = true;
         
@@ -52,18 +69,42 @@ public class Rocket : MonoBehaviour {
     }
 
     private void OnCollisionEnter(Collision other) {
+        if (_state != State.Alive) {
+            return;
+        }
+        
         switch (other.transform.tag) {
             case "Friendly":
                 Debug.Log("Hit Friendly");
                 break;
             case "Finish":
-                Debug.Log("Hit Finish");
-                SceneManager.LoadScene(1);
+                StartSuccessSequence();
                 break;
             default:
-                Debug.Log("Not friendly");
-                SceneManager.LoadScene(0);
+                StartDeathSequence();
                 break;
         }
+    }
+
+    private void StartDeathSequence() {
+        _state = State.Dying;
+        _audioSource.Stop();
+        _audioSource.PlayOneShot(_engineExplosion);
+        Invoke("LoadFirstLevel", 1f);
+    }
+
+    private void StartSuccessSequence() {
+        _state = State.Trascending;
+        _audioSource.Stop();
+        _audioSource.PlayOneShot(_success);
+        Invoke("LoadNextScene", 1f);
+    }
+
+    private void LoadNextScene() {
+        SceneManager.LoadScene(1);
+    }
+
+    private void LoadFirstLevel() {
+        SceneManager.LoadScene(0);
     }
 }
