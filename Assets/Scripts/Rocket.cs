@@ -26,12 +26,14 @@ public class Rocket : MonoBehaviour {
         Trascending
     };
 
+    [SerializeField] private bool _collisionsDisabled = true;
+
     [SerializeField] private State _state = State.Alive;
 
     // Start is called before the first frame update
     void Start() {
         _rigidbody = GetComponent<Rigidbody>();
-        _audioSource = GetComponent<AudioSource>();
+        _audioSource = GetComponent<AudioSource>(); 
     }
 
     // Update is called once per frame
@@ -77,7 +79,7 @@ public class Rocket : MonoBehaviour {
     }
 
     private void OnCollisionEnter(Collision other) {
-        if (_state != State.Alive) {
+        if (_state != State.Alive || !_collisionsDisabled) {
             return;
         }
         
@@ -106,15 +108,19 @@ public class Rocket : MonoBehaviour {
         _state = State.Trascending;
         _audioSource.Stop();
         _audioSource.PlayOneShot(_success);
-        _successParticles.Play();
+        Instantiate(_successParticles, transform.position, Quaternion.identity);
         Invoke("LoadNextScene", _levelLoadDelay);
     }
 
-    private void LoadNextScene() {
+    public void LoadNextScene() {
         SceneManager.LoadScene(1);
     }
 
     private void LoadFirstLevel() {
         SceneManager.LoadScene(0);
+    }
+
+    public void ToggleCollisionsDisabled() {
+        _collisionsDisabled = !_collisionsDisabled;
     }
 }
